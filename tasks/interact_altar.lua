@@ -4,45 +4,44 @@ local tracker    = require "core.tracker"
 local explorer   = require "core.explorer"
 local settings   = require "core.settings"
 
-local last_reset = 0
+local function interact_with_altar()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "Boss_WT4_Varshan" or name == "Boss_WT4_Duriel" or name == "Boss_WT4_PenitantKnight" or name == "Boss_WT4_Andariel" or name == "Boss_WT4_MegaDemon" or name == "Boss_WT4_S2VampireLord" then
+            return actor
+        end
+    end
+    return nil
+end
+
 local task = {
     name = "Interact Altar",
     shouldExecute = function()
-        --console.print("Checking if the task 'Exit Pit' should be executed.")
-
-        local is_in_boss_zone = false
-        if utils.match_player_zone("Boss_WT4_") then
-            is_in_boss_zone = true
-        end
-        
-
-        return utils.player_on_quest(get_current_world():get_current_zone_name()) and not utils.loot_on_floor() and utils.get_altar()
+        local is_in_boss_zone = utils.match_player_zone("Boss_WT4_") or utils.match_player_zone("Boss_WT3_")
+        return is_in_boss_zone and interact_with_altar()
     end,
-    Execute = function()
-        --console.print("Executing the task: Interact Altar.")
-        explorer.is_task_running = true  -- Set the flag
-        --console.print("Setting explorer task running flag to true.")
-        explorer:clear_path_and_target()
-      --  console.print("Clearing path and target in explorer.")
 
-        local altar = utils.get_altar()
+    Execute = function()
+        local altar = interact_with_altar()
         if altar then
-            loot_manager.interact_with_object(altar)
-            if utils.distance_to(altar) <= 2 then
-                
+            local actor_position = altar:get_position()  -- Abrufen der Position des Altars
+            if utils.distance_to(actor_position) > 4 then
+                pathfinder.force_move_raw(actor_position)  -- Bewege den Spieler zum Altar
+            end
+
+            if utils.distance_to(actor_position) <= 2 then
+                interact_object(altar)
                 if settings.tormented then
                     utility.summon_boss_next_recipe()
                 end
 
                 utility.summon_boss()
-
                 settings.altar_activated = true
             end
         end
 
-        explorer.is_task_running = false  -- Reset the flag
-  --      console.print("Setting explorer task running flag to false.")
+        explorer.is_task_running = false  -- Zurücksetzen des Flags
     end
 }
-
 return task

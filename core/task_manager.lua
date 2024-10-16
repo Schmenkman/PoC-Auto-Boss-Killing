@@ -83,7 +83,7 @@ end
 function task_manager.get_current_task()
     return current_task or { name = "Idle" }
 end
-local task_files = { "kill_monsters", "explore_boss", "finish_boss", "exit_boss", "interact_altar", "enter_boss" }
+local task_files = { "kill_monsters", "explore_boss", "interact_altar", "enter_boss" }
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)
     task_manager.register_task(task)

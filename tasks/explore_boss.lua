@@ -1,27 +1,28 @@
 local utils = require "core.utils"
 local enums = require "data.enums"
 local explorer = require "core.explorer"
-local settings   = require "core.settings"
+local settings = require "core.settings"
 
-
-local task  = {
+local task = {
     name = "Explore Boss Dungeon",
     shouldExecute = function()
-        --console.print("Checking if the task 'Explore Pit' should be executed.")
+        local is_in_boss_zone = utils.match_player_zone("Boss_WT4_") or utils.match_player_zone("Boss_WT3_")
+        
+        if not is_in_boss_zone then
+            return false
+        end
 
-        local player_position = get_player_position() -- If player is in boss room, dont explore! FIGHT :)
+        local player_position = get_player_position()
         if player_position:dist_to(enums.positions.getBossRoomPosition(get_current_world():get_current_zone_name())) < 10 then
             return false
         end
-            return utils.player_on_quest(get_current_world():get_current_zone_name()) and not utils.get_closest_enemy()
-    
+
+        return not utils.get_closest_enemy()
     end,
+
     Execute = function()
-        --console.print("Executing the task: Explore Boss.")  
         
-
-
-        local player_position = get_player_position() -- If player is in boss room, dont explore! FIGHT :)
+        local player_position = get_player_position()
         if player_position:dist_to(enums.positions.getBossRoomPosition(get_current_world():get_current_zone_name())) < 5 then
             explorer.enabled = false
         else
@@ -35,9 +36,6 @@ local task  = {
             explorer:set_custom_target(enums.positions.getBossRoomPosition(get_current_world():get_current_zone_name()))
             explorer:move_to_target()
         end
-
-      
-
     end
 }
 
